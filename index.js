@@ -154,7 +154,7 @@ function detectIntent(message) {
  const stockMatch = msg.match(/\b([a-z]{1,5})\s*(stock|price|futures|quote)?\b/);
   if (stockMatch) {
     const ticker = stockMatch[1].toUpperCase();
-    const ignore = ["THE", "FOR", "AND", "HOW", "WHAT", "IS", "OF", "A", "HI", "HEY", "LOL", "YES", "NO"];
+    const ignore = ["THE", "FOR", "AND", "HOW", "WHAT", "IS", "OF", "A", "HI", "HEY", "LOL", "YES", "NO", "CAN", "YOU", "GIVE", "MORE", "STEP", "PLUG", "TIRE", "DOES", "WHY", "WHO", "GET", "PUT", "SET", "LET", "DID", "HAS", "HAD", "ARE", "WAS", "NOT", "BUT", "ITS", "ALL", "OUT", "NEW", "NOW", "OLD", "TOO", "USE", "DO", "TO", "IN", "IT", "MY", "ME", "UP", "SO", "IF", "GO", "ON", "AT", "BE", "BY", "OR", "AN"];
     if (!ignore.includes(ticker) && ticker.length >= 2) return { type: "stock", ticker };
   }
 
