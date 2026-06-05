@@ -12,7 +12,7 @@ const NEWS_API_KEY = process.env.NEWS_API_KEY;
 // Setup Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.0-flash",
   systemInstruction: `You are an expert livestock and commodities market assistant in a GroupMe group chat.
 You specialize in Live Cattle, Feeder Cattle, Lean Hogs, Class III Milk, and Butter futures.
 You can explain market trends, contract specs, and trading strategies.
