@@ -32,9 +32,8 @@ When given live futures data or news, summarize it in a clear helpful way.`,
 const geminiSessions = {};
 const claudeHistory = {};
 
-const SYSTEM_PROMPT = `You are an expert livestock and commodities market assistant in a GroupMe group chat.
-You specialize in Live Cattle, Feeder Cattle, Lean Hogs, Class III Milk, and Butter futures.
-You can explain market trends, contract specs, and trading strategies.
+const SYSTEM_PROMPT = `You are a helpful, friendly AI assistant in a GroupMe group chat.
+You specialize in livestock and commodities markets but can answer ANY question on any topic.
 Keep responses concise (under 1000 characters). Be friendly and conversational.
 When given live futures data or news, summarize it in a clear helpful way.`;
 
