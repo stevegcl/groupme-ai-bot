@@ -42,15 +42,19 @@ When given live futures data or news, summarize it in a clear helpful way.`;
 const LIVESTOCK_TICKERS = {
   "live cattle": "LE=F",
   "cattle": "LE=F",
+  "le": "LE=F",
   "feeder cattle": "GF=F",
   "feeder": "GF=F",
+  "gf": "GF=F",
   "lean hogs": "HE=F",
   "hogs": "HE=F",
+  "he": "HE=F",
   "milk": "DC=F",
   "class iii milk": "DC=F",
+  "dc": "DC=F",
   "butter": "CB=F",
+  "cb": "CB=F",
 };
-
 // ── Send message to GroupMe ──────────────────────────────────────
 async function sendGroupMeMessage(text) {
   const res = await fetch("https://api.groupme.com/v3/bots/post", {
