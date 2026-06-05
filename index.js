@@ -152,11 +152,11 @@ function detectIntent(message) {
     }
   }
 
-  const stockMatch = msg.match(/\b([a-z]{1,5})\s*(stock|price|futures|quote)\b/);
+ const stockMatch = msg.match(/\b([a-z]{1,5})\s*(stock|price|futures|quote)?\b/);
   if (stockMatch) {
     const ticker = stockMatch[1].toUpperCase();
-    const ignore = ["THE", "FOR", "AND", "HOW", "WHAT", "IS", "OF", "A"];
-    if (!ignore.includes(ticker)) return { type: "stock", ticker };
+    const ignore = ["THE", "FOR", "AND", "HOW", "WHAT", "IS", "OF", "A", "HI", "HEY", "LOL", "YES", "NO"];
+    if (!ignore.includes(ticker) && ticker.length >= 2) return { type: "stock", ticker };
   }
 
   const newsMatch = msg.match(/news\s+(?:about|on)?\s+(.+)/) ||
