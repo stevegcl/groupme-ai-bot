@@ -202,11 +202,23 @@ app.post("/webhook", async (req, res) => {
   const userMessage = text.trim();
   console.log(`[${new Date().toISOString()}] ${name}: ${userMessage}`);
 
-  const botMentioned =
-    userMessage.toLowerCase().includes("@ai") ||
+ const botMentioned =
+    userMessage.toLowerCase().startsWith("@claude") ||
+    userMessage.toLowerCase().startsWith("@gemini") ||
     userMessage.toLowerCase().includes(BOT_NAME.toLowerCase()) ||
     process.env.RESPOND_TO_ALL === "true";
   if (!botMentioned) return;
+
+  // Detect which AI was requested
+  let aiChoice = "auto";
+  let cleanMessage = userMessage;
+  if (userMessage.toLowerCase().startsWith("@claude")) {
+    aiChoice = "claude";
+    cleanMessage = userMessage.slice(7).trim();
+  } else if (userMessage.toLowerCase().startsWith("@gemini")) {
+    aiChoice = "gemini";
+    cleanMessage = userMessage.slice(7).trim();
+  }
 
   try {
     const intent = detectIntent(userMessage);
