@@ -258,8 +258,14 @@ Summarize this in a friendly way with market context.`;
 
     let aiReply;
 
-    // Try Claude first, fall back to Gemini
-    if (anthropic) {
+   // Use requested AI or auto
+    if (aiChoice === "gemini" && geminiModel) {
+      aiReply = await askGemini(groupId, prompt);
+      console.log("[Gemini replied - user requested]");
+    } else if (aiChoice === "claude" && anthropic) {
+      aiReply = await askClaude(groupId, prompt);
+      console.log("[Claude replied - user requested]");
+    } else if (anthropic) {
       try {
         aiReply = await askClaude(groupId, prompt);
         console.log("[Claude replied]");
