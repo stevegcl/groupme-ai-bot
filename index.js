@@ -21,7 +21,7 @@ const genAI = process.env.GEMINI_API_KEY
   : null;
 const geminiModel = genAI
   ? genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash-latest",
       systemInstruction: `You are a helpful, friendly AI assistant in a GroupMe group chat.
 You can answer ANY question on any topic — homework, cooking, sports, news, advice, jokes, math, and more.
 When someone asks how to do something, always give clear step by step instructions.
