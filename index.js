@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 const BOT_ID = process.env.GROUPME_BOT_ID;
-const BOT_NAME = process.env.BOT_NAME || "Livestock Bot";
+const BOT_NAME = process.env.BOT_NAME || "AI Bot";
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 
 // Setup Claude (primary)
@@ -22,10 +22,10 @@ const genAI = process.env.GEMINI_API_KEY
 const geminiModel = genAI
   ? genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
-      systemInstruction: `You are an expert livestock and commodities market assistant in a GroupMe group chat.
-You specialize in Live Cattle, Feeder Cattle, Lean Hogs, Class III Milk, and Butter futures.
-Keep responses concise (under 1000 characters). Be friendly and conversational.
-When given live futures data or news, summarize it in a clear helpful way.`,
+      systemInstruction: `You are a helpful, friendly AI assistant in a GroupMe group chat.
+You can answer ANY question on any topic — homework, cooking, sports, news, advice, jokes, math, and more.
+When someone asks how to do something, always give clear step by step instructions.
+Keep responses concise (under 1000 characters). Be friendly and conversational.`,
     })
   : null;
 
@@ -40,20 +40,17 @@ Keep responses concise (under 1000 characters). Be friendly and conversational.`
 // Livestock futures tickers
 const LIVESTOCK_TICKERS = {
   "live cattle": "LE=F",
-  "cattle": "LE=F",
-  "le": "LE=F",
   "feeder cattle": "GF=F",
-  "feeder": "GF=F",
-  "gf": "GF=F",
   "lean hogs": "HE=F",
-  "hogs": "HE=F",
-  "he": "HE=F",
-  "milk": "DC=F",
   "class iii milk": "DC=F",
-  "dc": "DC=F",
-  "butter": "CB=F",
-  "cb": "CB=F",
+  "butter futures": "CB=F",
+  "le=f": "LE=F",
+  "gf=f": "GF=F",
+  "he=f": "HE=F",
+  "dc=f": "DC=F",
+  "cb=f": "CB=F",
 };
+
 // ── Send message to GroupMe ──────────────────────────────────────
 async function sendGroupMeMessage(text) {
   const res = await fetch("https://api.groupme.com/v3/bots/post", {
@@ -141,27 +138,30 @@ async function getNews(query) {
 function detectIntent(message) {
   const msg = message.toLowerCase();
 
+  // All livestock prices
   if (msg.includes("all prices") || msg.includes("market update") || msg.includes("all futures") || msg.includes("all livestock")) {
     return { type: "all_livestock" };
   }
 
+  // Specific livestock — only exact phrases
   for (const [keyword, ticker] of Object.entries(LIVESTOCK_TICKERS)) {
     if (msg.includes(keyword)) {
       return { type: "livestock", ticker, name: keyword };
     }
   }
 
- const stockMatch = msg.match(/\b([a-z]{1,5})\s*(stock|price|futures|quote)?\b/);
+  // Stock price — only when user says "stock" or "price" after ticker
+  const stockMatch = msg.match(/\b([a-z]{1,5})\s+(stock|price|quote)\b/);
   if (stockMatch) {
-    const ticker = stockMatch[1].toUpperCase();
-    const ignore = ["THE", "FOR", "AND", "HOW", "WHAT", "IS", "OF", "A", "HI", "HEY", "LOL", "YES", "NO", "CAN", "YOU", "GIVE", "MORE", "STEP", "PLUG", "TIRE", "DOES", "WHY", "WHO", "GET", "PUT", "SET", "LET", "DID", "HAS", "HAD", "ARE", "WAS", "NOT", "BUT", "ITS", "ALL", "OUT", "NEW", "NOW", "OLD", "TOO", "USE", "DO", "TO", "IN", "IT", "MY", "ME", "UP", "SO", "IF", "GO", "ON", "AT", "BE", "BY", "OR", "AN"];
-    if (!ignore.includes(ticker) && ticker.length >= 2) return { type: "stock", ticker };
+    return { type: "stock", ticker: stockMatch[1].toUpperCase() };
   }
 
+  // News
   const newsMatch = msg.match(/news\s+(?:about|on)?\s+(.+)/) ||
                     msg.match(/latest\s+(?:news\s+)?(?:about|on)?\s+(.+)/);
   if (newsMatch) return { type: "news", query: newsMatch[1].trim() };
 
+  // Everything else is just a chat question
   return { type: "chat" };
 }
 
@@ -202,13 +202,6 @@ app.post("/webhook", async (req, res) => {
   const userMessage = text.trim();
   console.log(`[${new Date().toISOString()}] ${name}: ${userMessage}`);
 
- const botMentioned =
-    userMessage.toLowerCase().startsWith("@claude") ||
-    userMessage.toLowerCase().startsWith("@gemini") ||
-    userMessage.toLowerCase().includes(BOT_NAME.toLowerCase()) ||
-    process.env.RESPOND_TO_ALL === "true";
-  if (!botMentioned) return;
-
   // Detect which AI was requested
   let aiChoice = "auto";
   let cleanMessage = userMessage;
@@ -220,9 +213,15 @@ app.post("/webhook", async (req, res) => {
     cleanMessage = userMessage.slice(7).trim();
   }
 
+  const botMentioned =
+    aiChoice !== "auto" ||
+    userMessage.toLowerCase().includes(BOT_NAME.toLowerCase()) ||
+    process.env.RESPOND_TO_ALL === "true";
+  if (!botMentioned) return;
+
   try {
-    const intent = detectIntent(userMessage);
-    let prompt = `${name} says: ${userMessage}`;
+    const intent = detectIntent(cleanMessage);
+    let prompt = `${name} says: ${cleanMessage}`;
 
     if (intent.type === "all_livestock") {
       const prices = await getAllLivestockPrices();
@@ -258,7 +257,6 @@ Summarize this in a friendly way with market context.`;
 
     let aiReply;
 
-   // Use requested AI or auto
     if (aiChoice === "gemini" && geminiModel) {
       aiReply = await askGemini(groupId, prompt);
       console.log("[Gemini replied - user requested]");
@@ -274,9 +272,7 @@ Summarize this in a friendly way with market context.`;
         if (geminiModel) {
           aiReply = await askGemini(groupId, prompt);
           console.log("[Gemini replied as fallback]");
-        } else {
-          throw err;
-        }
+        } else throw err;
       }
     } else if (geminiModel) {
       aiReply = await askGemini(groupId, prompt);
@@ -301,7 +297,7 @@ Summarize this in a friendly way with market context.`;
 // Health check
 app.get("/", (req, res) => {
   res.json({
-    status: "Livestock AI Bot is running!",
+    status: "AI Bot is running!",
     bot: BOT_NAME,
     claude: !!anthropic,
     gemini: !!geminiModel,
@@ -309,4 +305,4 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🐄 ${BOT_NAME} running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🤖 ${BOT_NAME} running on port ${PORT}`));
